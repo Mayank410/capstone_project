@@ -1,0 +1,39 @@
+#include <Wire.h>
+
+const int sensorAddress = 0x??; // Replace with the actual I2C address of your sensor
+
+void setup() {
+  Wire.begin();
+  Serial.begin(9600);
+
+  initializeSensor(); // Initialize the heart rate sensor
+}
+
+void loop() {
+  int heartRate = readHeartRate(); // Read heart rate from the sensor
+
+  Serial.print("Heart Rate: ");
+  Serial.println(heartRate);
+
+  delay(1000); // Delay for a second before reading again
+}
+
+void initializeSensor() {
+  // Send initialization commands to the heart rate sensor
+  // Replace this with the actual initialization sequence for your sensor
+  Wire.beginTransmission(sensorAddress);
+  // Send commands to initialize the sensor
+  // ...
+  Wire.endTransmission();
+}
+
+int readHeartRate() {
+  Wire.requestFrom(sensorAddress, 2); // Request heart rate data
+  int heartRate = 0;
+
+  if (Wire.available() >= 2) {
+    heartRate = Wire.read() << 8 | Wire.read();
+  }
+
+  return heartRate;
+}
