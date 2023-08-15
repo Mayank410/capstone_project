@@ -1,0 +1,57 @@
+#include <Wire.h>
+#include <Adafruit_SSD1306.h>
+
+const int sensorAddress = 0x??; // Replace with the actual I2C address of your sensor
+
+Adafruit_SSD1306 display(128, 64, &Wire, -1); // Initialize the OLED display
+
+void setup() {
+  Wire.begin();
+  Serial.begin(9600);
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3C); // Initialize OLED display
+  display.display();
+  delay(2000); // Wait for display to initialize
+  
+  initializeSensor(); // Initialize the heart rate sensor
+}
+
+void loop() {
+  int heartRate = readHeartRate(); // Read heart rate from the sensor
+
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  display.println("Heart Rate Sensor");
+  display.setTextSize(2);
+  display.setCursor(0, 20);
+  display.print("Heart Rate:");
+  display.setCursor(0, 40);
+  display.print(heartRate);
+  display.display();
+
+  Serial.print("Heart Rate: ");
+  Serial.println(heartRate);
+
+  delay(1000); // Delay for a second before reading again
+}
+
+void initializeSensor() {
+  // Send initialization commands to the heart rate sensor
+  // Replace this with the actual initialization sequence for your sensor
+  Wire.beginTransmission(sensorAddress);
+  // Send commands to initialize the sensor
+  // ...
+  Wire.endTransmission();
+}
+
+int readHeartRate() {
+  Wire.requestFrom(sensorAddress, 2); // Request heart rate data
+  int heartRate = 0;
+
+  if (Wire.available() >= 2) {
+    heartRate = Wire.read() << 8 | Wire.read();
+  }
+
+  return heartRate;
+}
