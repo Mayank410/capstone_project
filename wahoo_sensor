@@ -1,0 +1,70 @@
+#include <Adafruit_BluefruitLE_SPI.h>
+#include <Adafruit_BluefruitLE_UART.h>
+#include <Adafruit_BLEBattery.h>
+
+// Pin Definitions for Flora
+#define BLUEFRUIT_SPI_CS    8
+#define BLUEFRUIT_SPI_IRQ   7
+#define BLUEFRUIT_SPI_RST   4
+
+// Initialize Bluetooth
+Adafruit_BluefruitLE_SPI ble(BLUEFRUIT_SPI_CS, BLUEFRUIT_SPI_IRQ, BLUEFRUIT_SPI_RST);
+
+// Connect to Wahoo Sensor
+BLEClientUart clientUart(ble);
+bool connected = false;
+
+void connectToWahoo() {
+  ble.println("AT+CENTRAL");
+  delay(500);
+
+  if (!connected) {
+    ble.println("AT+BLESCAN");
+    delay(5000);
+
+    if (ble.available()) {
+      String response = ble.readStringUntil('\n');
+      if (response.startsWith("OK+DIS0:")) {
+        String address = response.substring(9, 26);
+        ble.println("AT+BLECONNECT=" + address);
+        delay(5000);
+      }
+    }
+  }
+
+  connected = clientUart.isConnected();
+}
+
+void setup() {
+  // Initialize Flora and BLE
+  ble.begin(false);
+  ble.setMode(BLUEFRUIT_MODE_DATA);
+
+  // Connect to Wahoo
+  connectToWahoo();
+}
+
+void processSensorData(char data) {
+  // Add your logic to process the received sensor data here
+  // For example, you can print it or perform some actions based on the data
+  Serial.print("Received sensor data: ");
+  Serial.println(data);
+}
+
+void readSensorData() {
+  if (connected) {
+    while (clientUart.available()) {
+      char c = clientUart.read();
+      processSensorData(c);
+    }
+  }
+}
+
+void loop() {
+  if (!connected) {
+    connectToWahoo();
+  }
+
+  // Read and process data from the Wahoo sensor
+  readSensorData();
+}
